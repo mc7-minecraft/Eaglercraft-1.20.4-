@@ -81,5 +81,28 @@ async function loadAssets(epkFile) {
     }
 }
 loadAssets("assets.epk");
+// main.js — Minecraft-style launcher scaffold
 
+window.addEventListener("load", () => {
+    const gameFrame = document.getElementById("game-frame");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gameFrame.appendChild(canvas);
+
+    const ctx = canvas.getContext("2d");
+
+    // --- Helper: draw blocky button ---
+    function drawButton(btn) {
+        ctx.fillStyle = "#555"; // dark gray background
+        ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
+
+        ctx.strokeStyle = "#000"; // black outline
+        ctx.lineWidth = 4;
+        ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
+
+        ctx.fillStyle = "#fff"; // white text
+        ctx.font = "20px 'Courier New', monospace"; // pixel-ish font
+        ctx.fillText(btn.text, btn.x + 20, btn
 //this is not officially complete
