@@ -372,6 +372,15 @@
     });
   });
 })();
+let state = "menu";
+
+function draw() {
+  if (state === "menu") drawMenu();
+  else if (state === "single") drawSingleplayer();
+  else if (state === "multi") drawMultiplayer();
+  else if (state === "options") drawOptions();
+}
+localStorage.setItem("volume", "80");
 
        
     
