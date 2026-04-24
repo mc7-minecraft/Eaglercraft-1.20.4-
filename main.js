@@ -1,135 +1,378 @@
-// main.js — pseudo Minecraft launcher scaffold
+// main.js — Minecraft-like launcher scaffold with interactivity and asset hook
+// Drop into your repo as main.js
 
-window.addEventListener("load", () => {
-    const gameFrame = document.getElementById("game-frame");
+(() => {
+  // ---------- Config and State ----------
+  const config = {
+    title: "Eaglercraft Launcher",
+    canvasBg: "#1e1e1e",
+    titleColor: "#7FFF7F",
+    buttonBg: "#6b6b6b",
+    buttonBorder: "#000000",
+    buttonText: "#ffffff",
+    font: "20px 'Courier New', monospace",
+    titleFont: "48px 'Courier New', monospace",
+    pixelScale: 1, // change to 2 for larger UI
+    assetFile: "assets.epk",
+  };
 
-    // Create canvas
+  let state = "menu"; // menu | single | multi | options | loading
+  let hoverIndex = -1;
+  let selectedIndex = 0;
+  let assetsInfo = { loaded: false, size: 0, received: 0 };
+
+  // Buttons definition
+  const buttons = [
+    { id: "single", text: "Singleplayer" },
+    { id: "multi", text: "Multiplayer" },
+    { id: "options", text: "Options" },
+    { id: "quit", text: "Quit" },
+  ];
+
+  // Hooks for engine integration
+  // Replace or override these in another script when you have engine.js
+  window.onAssetsReady = window.onAssetsReady || function (assetBlob) {
+    console.log("onAssetsReady hook called. assetBlob:", assetBlob);
+    // Example: startEngineWithAssets(assetBlob);
+  };
+  window.startEngine = window.startEngine || function () {
+    console.log("startEngine hook called. Replace with real engine start.");
+  };
+
+  // ---------- Setup Canvas ----------
+  window.addEventListener("load", () => {
+    const container = document.getElementById("game-frame") || document.body;
     const canvas = document.createElement("canvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.id = "mc-canvas";
     canvas.style.display = "block";
-    gameFrame.appendChild(canvas);
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.width = Math.max(800, window.innerWidth);
+    canvas.height = Math.max(600, window.innerHeight);
+    container.appendChild(canvas);
 
     const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
 
-    // Simple background
-    ctx.fillStyle = "#1e1e1e";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Title
-    ctx.fillStyle = "#0f0";
-    ctx.font = "40px Arial";
-    ctx.fillText("Eaglercraft Launcher", 50, 80);
-
-    // Menu buttons (pseudo)
-    // main.js — Minecraft-style launcher scaffold
-
-window.addEventListener("load", () => {
-    const gameFrame = document.getElementById("game-frame");
-
-    const canvas = document.createElement("canvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    gameFrame.appendChild(canvas);
-
-    const ctx = canvas.getContext("2d");
-
-    // --- Helper: draw blocky button ---
-    function drawButton(btn) {
-        ctx.fillStyle = "#555"; // dark gray background
-        ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
-
-        ctx.strokeStyle = "#000"; // black outline
-        ctx.lineWidth = 4;
-        ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
-
-        ctx.fillStyle = "#fff"; // white text
-        ctx.font = "20px 'Courier New', monospace"; // pixel-ish font
-        ctx.fillText(btn.text, btn.x + 20, btn
-
-    // Example asset loader hook
-    function loadAssets(epkFile) {
-        console.log("Pretend loading assets from:", epkFile);
-        // In real client, this would unpack assets.epk
+    // Utility helpers
+    function clear() {
+      ctx.fillStyle = config.canvasBg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    loadAssets("assets.epk");
-
-    // Example game loop placeholder
-    function loop() {
-        // Animate a spinning square
-        const time = Date.now() / 500;
-        const x = 400 + Math.sin(time) * 100;
-        const y = 200 + Math.cos(time) * 100;
-
-        ctx.fillStyle = "#ff0";
-        ctx.clearRect(300, 100, 300, 300);
-        ctx.fillRect(x, y, 50, 50);
-
-        requestAnimationFrame(loop);
+    function drawText(text, x, y, font, color) {
+      ctx.fillStyle = color;
+      ctx.font = font;
+      ctx.fillText(text, x, y);
     }
 
-    loop();
-});
-async function loadAssets(epkFile) {
-    try {
-        const response = await fetch(epkFile);
-        if (!response.ok) throw new Error("Failed to load assets");
-        console.log("Loaded assets.epk:", await response.blob());
-    } catch (err) {
-        console.error("Asset load error:", err);
+    function drawBlockyRect(x, y, w, h, fill, border) {
+      ctx.fillStyle = fill;
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = border;
+      ctx.lineWidth = 4;
+      ctx.strokeRect(x, y, w, h);
     }
-}
-loadAssets("assets.epk");
-// main.js — Minecraft-style launcher scaffold
 
-window.addEventListener("load", () => {
-    const gameFrame = document.getElementById("game-frame");
+    // Layout helpers
+    function menuLayout() {
+      const left = 60;
+      const top = 140;
+      const w = 320;
+      const h = 56;
+      return { left, top, w, h, gap: 18 };
+    }
 
-    const canvas = document.createElement("canvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    gameFrame.appendChild(canvas);
+    // Hit test
+    function hitTest(x, y, btnRect) {
+      return x >= btnRect.x && x <= btnRect.x + btnRect.w && y >= btnRect.y && y <= btnRect.y + btnRect.h;
+    }
 
-    const ctx = canvas.getContext("2d");
+    // ---------- Draw Screens ----------
+    function drawMenu() {
+      clear();
+      drawText(config.title, 60, 90, config.titleFont, config.titleColor);
 
-    // --- Helper: draw blocky button ---
-    function drawButton(btn) {
-        ctx.fillStyle = "#555"; // dark gray background
-        ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
+      const layout = menuLayout();
+      buttons.forEach((b, i) => {
+        const x = layout.left;
+        const y = layout.top + i * (layout.h + layout.gap);
+        const w = layout.w;
+        const h = layout.h;
 
-        ctx.strokeStyle = "#000"; // black outline
-        ctx.lineWidth = 4;
-        ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
+        // hover effect
+        const bg = i === hoverIndex ? shadeColor(config.buttonBg, -12) : config.buttonBg;
+        drawBlockyRect(x, y, w, h, bg, config.buttonBorder);
 
-        ctx.fillStyle = "#fff"; // white text
-        ctx.font = "20px 'Courier New', monospace"; // pixel-ish font
-        ctx.fillText(btn.text, btn.x + 20, btn
-                     // main.js — Minecraft-style launcher with clickable buttons
+        ctx.fillStyle = config.buttonText;
+        ctx.font = config.font;
+        ctx.fillText(b.text, x + 20, y + 36);
+        // store rect for hit testing
+        b._rect = { x, y, w, h };
+      });
 
-window.addEventListener("load", () => {
-    const gameFrame = document.getElementById("game-frame");
+      // footer
+      ctx.fillStyle = "#bfbfbf";
+      ctx.font = "14px 'Courier New', monospace";
+      ctx.fillText("assets: " + (assetsInfo.loaded ? "ready" : "not loaded"), 60, canvas.height - 40);
+    }
 
-    const canvas = document.createElement("canvas");
-    canvas.width = window.innerWidth;
-    canvas
-    let state = "menu"; // "menu" | "single" | "multi" | "options"
+    function drawLoading(progress, total) {
+      clear();
+      drawText("Loading Assets", 60, 120, "36px 'Courier New', monospace", "#ffffff");
+      const barX = 60;
+      const barY = 160;
+      const barW = 600;
+      const barH = 28;
+      // background
+      ctx.fillStyle = "#333";
+      ctx.fillRect(barX, barY, barW, barH);
+      // progress
+      const pct = total ? Math.min(1, progress / total) : 0;
+      ctx.fillStyle = "#7FFF7F";
+      ctx.fillRect(barX, barY, Math.floor(barW * pct), barH);
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(barX, barY, barW, barH);
 
-function draw() {
-  if (state === "menu") drawMenu();
-  else if (state === "single") drawSingleplayerScreen();
-  else if (state === "multi") drawMultiplayerScreen();
-  else if (state === "options") drawOptionsScreen();
-}
+      ctx.fillStyle = "#fff";
+      ctx.font = "16px 'Courier New', monospace";
+      ctx.fillText(`${Math.floor(pct * 100)}%`, barX + barW + 12, barY + 20);
+    }
 
-canvas.addEventListener("click", (e) => {
-  const { x, y } = getMousePos(e);
-  if (state === "menu") {
-    if (hit(buttons[0], x, y)) state = "single";
-    else if (hit(buttons[1], x, y)) state = "multi";
-    else if (hit(buttons[2], x, y)) state = "options";
+    function drawSingleplayer() {
+      clear();
+      drawText("Singleplayer", 60, 90, "36px 'Courier New', monospace", "#fff");
+      drawText("This is a placeholder screen.", 60, 150, config.font, "#ddd");
+      drawBackHint();
+    }
+
+    function drawMultiplayer() {
+      clear();
+      drawText("Multiplayer", 60, 90, "36px 'Courier New', monospace", "#fff");
+      drawText("Server list placeholder.", 60, 150, config.font, "#ddd");
+      drawBackHint();
+    }
+
+    function drawOptions() {
+      clear();
+      drawText("Options", 60, 90, "36px 'Courier New', monospace", "#fff");
+      drawText("Volume: 100% (localStorage)", 60, 150, config.font, "#ddd");
+      drawBackHint();
+    }
+
+    function drawBackHint() {
+      ctx.fillStyle = "#bfbfbf";
+      ctx.font = "14px 'Courier New', monospace";
+      ctx.fillText("Press Escape to return to menu", 60, canvas.height - 40);
+    }
+
+    // ---------- Input Handling ----------
+    function getMousePos(evt) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: Math.round((evt.clientX - rect.left) * (canvas.width / rect.width)),
+        y: Math.round((evt.clientY - rect.top) * (canvas.height / rect.height)),
+      };
+    }
+
+    canvas.addEventListener("mousemove", (e) => {
+      const pos = getMousePos(e);
+      if (state === "menu") {
+        let found = -1;
+        buttons.forEach((b, i) => {
+          if (b._rect && hitTest(pos.x, pos.y, b._rect)) found = i;
+        });
+        if (found !== hoverIndex) {
+          hoverIndex = found;
+          draw();
+        }
+      }
+    });
+
+    canvas.addEventListener("click", (e) => {
+      const pos = getMousePos(e);
+      if (state === "menu") {
+        buttons.forEach((b, i) => {
+          if (b._rect && hitTest(pos.x, pos.y, b._rect)) {
+            handleButton(b.id);
+          }
+        });
+      } else if (state === "loading") {
+        // ignore clicks while loading
+      } else {
+        // in sub screens, clicking returns to menu
+        state = "menu";
+        draw();
+      }
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (state === "menu") {
+        if (e.key === "ArrowDown") {
+          selectedIndex = (selectedIndex + 1) % buttons.length;
+          hoverIndex = selectedIndex;
+          draw();
+        } else if (e.key === "ArrowUp") {
+          selectedIndex = (selectedIndex - 1 + buttons.length) % buttons.length;
+          hoverIndex = selectedIndex;
+          draw();
+        } else if (e.key === "Enter") {
+          const b = buttons[selectedIndex];
+          if (b) handleButton(b.id);
+        }
+      } else {
+        if (e.key === "Escape") {
+          state = "menu";
+          draw();
+        }
+      }
+    });
+
+    // ---------- Button Actions ----------
+    function handleButton(id) {
+      if (id === "single") {
+        state = "single";
+        draw();
+      } else if (id === "multi") {
+        state = "multi";
+        draw();
+      } else if (id === "options") {
+        state = "options";
+        draw();
+      } else if (id === "quit") {
+        // Quit placeholder
+        clear();
+        drawText("Goodbye!", 60, 120, "36px 'Courier New', monospace", "#fff");
+        setTimeout(() => window.close && window.close(), 800);
+      }
+    }
+
+    // ---------- Asset Loader with Progress ----------
+    async function loadAssetsWithProgress(url) {
+      state = "loading";
+      drawLoading(0, 1);
+      try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error("Failed to fetch assets");
+        const contentLength = resp.headers.get("Content-Length");
+        const total = contentLength ? parseInt(contentLength, 10) : 0;
+
+        if (!resp.body || !resp.body.getReader) {
+          // Fallback: read as blob
+          const blob = await resp.blob();
+          assetsInfo = { loaded: true, size: blob.size, received: blob.size };
+          window.onAssetsReady(blob);
+          assetsInfo.loaded = true;
+          state = "menu";
+          draw();
+          return;
+        }
+
+        const reader = resp.body.getReader();
+        let received = 0;
+        const chunks = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+          assetsInfo.received = received;
+          assetsInfo.size = total;
+          drawLoading(received, total);
+        }
+        // combine chunks into a blob
+        const blob = new Blob(chunks);
+        assetsInfo = { loaded: true, size: blob.size, received: blob.size };
+        // call hook so engine can use the blob
+        try {
+          window.onAssetsReady(blob);
+        } catch (err) {
+          console.error("onAssetsReady hook error", err);
+        }
+        state = "menu";
+        draw();
+      } catch (err) {
+        console.error("Asset load failed", err);
+        clear();
+        drawText("Failed to load assets.epk", 60, 120, "28px 'Courier New', monospace", "#ff8080");
+        drawText("Check console for details", 60, 160, config.font, "#ddd");
+      }
+    }
+
+    // ---------- Main Draw Dispatcher ----------
+    function draw() {
+      if (state === "menu") drawMenu();
+      else if (state === "loading") {
+        const total = assetsInfo.size || 1;
+        drawLoading(assetsInfo.received || 0, total);
+      } else if (state === "single") drawSingleplayer();
+      else if (state === "multi") drawMultiplayer();
+      else if (state === "options") drawOptions();
+    }
+
+    // ---------- Utilities ----------
+    function shadeColor(color, percent) {
+      // color in hex or #rgb
+      try {
+        const f = color.slice(1);
+        const t = percent < 0 ? 0 : 255;
+        const p = Math.abs(percent) / 100;
+        const R = parseInt(f.substring(0, 2), 16);
+        const G = parseInt(f.substring(2, 4), 16);
+        const B = parseInt(f.substring(4, 6), 16);
+        const newR = Math.round((t - R) * p) + R;
+        const newG = Math.round((t - G) * p) + G;
+        const newB = Math.round((t - B) * p) + B;
+        return "#" + (0x1000000 + (newR << 16) + (newG << 8) + newB).toString(16).slice(1);
+      } catch (e) {
+        return color;
+      }
+    }
+
+    // ---------- Initial Draw and Auto Asset Load ----------
     draw();
-  }
-});
 
-//this is not officially complete
+    // Try to auto-load assets.epk if present
+    // This will show progress if server supports streaming
+    fetch(config.assetFile, { method: "HEAD" })
+      .then((r) => {
+        if (r.ok) {
+          // small delay so user sees menu first
+          setTimeout(() => loadAssetsWithProgress(config.assetFile), 400);
+        } else {
+          // no assets found, leave menu as-is
+        }
+      })
+      .catch(() => {
+        // network error or file not present
+      });
+
+    // Expose a manual loader for dev use
+    window.loadLauncherAssets = function (file) {
+      loadAssetsWithProgress(file || config.assetFile);
+    };
+
+    // Expose a startEngine adapter that waits for assets
+    window.startEngineWhenReady = async function () {
+      if (assetsInfo.loaded) {
+        window.startEngine();
+      } else {
+        // load then start
+        await loadAssetsWithProgress(config.assetFile);
+        window.startEngine();
+      }
+    };
+
+    // Resize handling
+    window.addEventListener("resize", () => {
+      canvas.width = Math.max(800, window.innerWidth);
+      canvas.height = Math.max(600, window.innerHeight);
+      draw();
+    });
+  });
+})();
+
+       
+    
+
