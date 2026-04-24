@@ -63,4 +63,15 @@ window.addEventListener("load", () => {
 
     loop();
 });
+async function loadAssets(epkFile) {
+    try {
+        const response = await fetch(epkFile);
+        if (!response.ok) throw new Error("Failed to load assets");
+        console.log("Loaded assets.epk:", await response.blob());
+    } catch (err) {
+        console.error("Asset load error:", err);
+    }
+}
+loadAssets("assets.epk");
+
 //this is not officially complete
