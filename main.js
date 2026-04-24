@@ -22,22 +22,30 @@ window.addEventListener("load", () => {
     ctx.fillText("Eaglercraft Launcher", 50, 80);
 
     // Menu buttons (pseudo)
-    const buttons = [
-        { text: "Singleplayer", x: 50, y: 150 },
-        { text: "Multiplayer", x: 50, y: 220 },
-        { text: "Options", x: 50, y: 290 },
-    ];
+    // main.js — Minecraft-style launcher scaffold
 
-    buttons.forEach(btn => {
-        ctx.fillStyle = "#333";
-        ctx.fillRect(btn.x, btn.y - 30, 200, 50);
-        ctx.strokeStyle = "#0f0";
-        ctx.strokeRect(btn.x, btn.y - 30, 200, 50);
+window.addEventListener("load", () => {
+    const gameFrame = document.getElementById("game-frame");
 
-        ctx.fillStyle = "#0f0";
-        ctx.font = "24px Arial";
-        ctx.fillText(btn.text, btn.x + 20, btn.y);
-    });
+    const canvas = document.createElement("canvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gameFrame.appendChild(canvas);
+
+    const ctx = canvas.getContext("2d");
+
+    // --- Helper: draw blocky button ---
+    function drawButton(btn) {
+        ctx.fillStyle = "#555"; // dark gray background
+        ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
+
+        ctx.strokeStyle = "#000"; // black outline
+        ctx.lineWidth = 4;
+        ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
+
+        ctx.fillStyle = "#fff"; // white text
+        ctx.font = "20px 'Courier New', monospace"; // pixel-ish font
+        ctx.fillText(btn.text, btn.x + 20, btn
 
     // Example asset loader hook
     function loadAssets(epkFile) {
