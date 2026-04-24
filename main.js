@@ -105,4 +105,12 @@ window.addEventListener("load", () => {
         ctx.fillStyle = "#fff"; // white text
         ctx.font = "20px 'Courier New', monospace"; // pixel-ish font
         ctx.fillText(btn.text, btn.x + 20, btn
+                     // main.js — Minecraft-style launcher with clickable buttons
+
+window.addEventListener("load", () => {
+    const gameFrame = document.getElementById("game-frame");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = window.innerWidth;
+    canvas
 //this is not officially complete
