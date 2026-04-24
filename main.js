@@ -113,4 +113,23 @@ window.addEventListener("load", () => {
     const canvas = document.createElement("canvas");
     canvas.width = window.innerWidth;
     canvas
+    let state = "menu"; // "menu" | "single" | "multi" | "options"
+
+function draw() {
+  if (state === "menu") drawMenu();
+  else if (state === "single") drawSingleplayerScreen();
+  else if (state === "multi") drawMultiplayerScreen();
+  else if (state === "options") drawOptionsScreen();
+}
+
+canvas.addEventListener("click", (e) => {
+  const { x, y } = getMousePos(e);
+  if (state === "menu") {
+    if (hit(buttons[0], x, y)) state = "single";
+    else if (hit(buttons[1], x, y)) state = "multi";
+    else if (hit(buttons[2], x, y)) state = "options";
+    draw();
+  }
+});
+
 //this is not officially complete
