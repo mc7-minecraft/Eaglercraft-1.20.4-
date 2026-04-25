@@ -1,53 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Play Minecraft 1.20 in your browser">
-    <meta name="keywords" content="eaglercraft, eaglercraftx, minecraft, 1.20">
-    <title>Eaglercraft 1.20.4</title>
-    <meta property="og:locale" content="en-US">
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Eaglercraft 1.20">
-    <meta property="og:description" content="Play Minecraft 1.20 in your browser">
-    <meta property="og:image" content="favicon.png">
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css">
-    <script src="fix-webm-duration.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Play Minecraft 1.20 in your browser">
+  <meta name="keywords" content="eaglercraft, eaglercraftx, minecraft, 1.20">
+  <title>Eaglercraft 1.20.4</title>
+  <meta property="og:locale" content="en-US">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Eaglercraft 1.20">
+  <meta property="og:description" content="Play Minecraft 1.20 in your browser">
+  <meta property="og:image" content="favicon.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Pixel font CSS -->
+  <style>
+    @font-face {
+      font-family: "PixelFont";
+      src: url("assets/fonts/pixel.woff2") format("woff2");
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+    #game-frame {
+      width: 100%;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #0f0f0f;
+    }
+    body, html {
+      margin: 0;
+      height: 100%;
+      background: #0f0f0f;
+    }
+  </style>
 </head>
-<body style="margin: 0; width: 100vw; height: 100vh; overflow: hidden;">   
-    <div id="game-frame">
-<script src="main.js"></script>
-<style>
-/* Pixel font */
-@font-face {
-  font-family: "PixelFont";
-  src: url("assets/fonts/pixel.woff2") format("woff2");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
+<body>
+  <div id="game-frame"></div>
 
-/* Canvas container */
-#game-frame {
-  width: 100%;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: #0f0f0f;
-}
-
-/* Optional: body reset */
-body, html {
-  margin: 0;
-  height: 100%;
-  background: #0f0f0f;
-}
-</style>
-
-
-        
-    </div>
+  <!-- Scripts should be loaded at the end of body -->
+  <script src="fix-webm-duration.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
